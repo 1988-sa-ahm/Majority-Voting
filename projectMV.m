@@ -1,13 +1,12 @@
-%%%% Ground Truth   %%%% Aksariate Ara
+%%%% Ground Truth   %%%% Majority Voting
 clc;close all;clear all
 Fs = 2000;
 T =1/Fs;
 N = 1000;
-gap = 20;              %%%&&&&&&&&&&&&& Hazfe Vaziathaye beyne Harekat $$$$$$$$$$$$$$$$$$$
+gap = 20;              %%%eleting Posture Between Motions
 motion = 1; % motion az 1 ta 9
 Tekrar = 1; % Tekrar az 1 ta 10
 nstate = 10*(motion-1)+(Tekrar);
-%w = ones(1,n);
 w =hamming(N)';
 load('C:\Users\Microsoft\Desktop\JodasazaiHarekatVaziat\Data\S1_E1_A1.mat')
 DCH = {[2 3 6],[1 2],[5 6],[7 8],[11 12 13 14],[8 11 14],[2 6 8 11 14],[2 5 6 7 8 10 11 13 14],[6 8 11 14]};
@@ -20,9 +19,7 @@ l = diff(l);
 p = find(l>0);
 q = find(l<0);  %%%
 
-m = 50;  %Nerkhe Down Sampling
-%Kashesh Nerkh NemoonehBrdari
-
+m = 50;  %Down Sampling
 
 %x = x(1 : m : end);
 l = l(1 : m : end);
@@ -43,9 +40,7 @@ mv=0;
 md=0;
 K = 1;
 
-
-
-ThFlag = 1;              %%###################
+ThFlag = 2;           %%########## 0 & 1 & 2
 
 
 for k = DCH{motion}
@@ -60,12 +55,12 @@ for k = DCH{motion}
     xd = d([p(nstate):n(nstate)]);
     xv = [xv(fix(N/(2*m)):end) zeros(1,fix(N/(2*m))-1) ];
 
-    %*************************************************************************************
+    %***********************************************
 
     if ThFlag==0
-        Th(k)=mean(abs(xv)); %%%%%%%%%%%%%%%%%%%%&&&&&&&&&&&&&&&&&7
+        Th(k)=mean(abs(xv)); %%%%%%%%%%%
     elseif ThFlag==1
-         Th(k)=mean(abs(xv(xv>=1))); 
+         Th(k)=mean(abs(xv(xv>=2))); 
 
     else
         x = sort(xv);
@@ -80,21 +75,19 @@ for k = DCH{motion}
     LV(K,:) = lv;
     K = K+1;
 end
-
-for ia = 1:size(LV,2)        %%% Majotiy Voting
+for ia = 1:size(LV,2)
     lv = LV(:,ia);
     for ib = 1:2
         nu(ib) = length(find(lv==ib));
     end
     [Pnu,Inu(ia)] = max(nu);
 end
-
-for r = [2 1]               %%% Deleting Posture Between Motions
+for r = [2 1]     %%Deleting the Posture Part Between the Motion Parts 
     y = find(Inu==r);
     I = find(diff(y)>1)
     Is = y(I)               
-    Ie = y(I+1)           
-    des = Ie-Is;            
+    Ie = y(I+1)            
+    des = Ie-Is;             
     for k = 1:length(Is)
         if des(k)<gap
             Inu(Is(k):Ie(k)) = r;
@@ -135,29 +128,25 @@ for k = DCH{motion}
 end
 subplot(4,3,flag)
 
-%%%length(DCH{motion})=Tedade Channelhaye matloob
-md=md/length(DCH{motion});
+%%%length(DCH{motion})=Number of Desired Channels
 mv=mv/length(DCH{motion});
 
 hold on
-%plot (xt1,md, 'm')
 plot (xt2,mv, 'y')
 
 if ThFlag==0
     Th=mean(abs(mv)); %%%%%%%%%%%%%%%%%%%%&&&&&&&&&&&&&&&&&
 elseif ThFlag==1
-         Th=mean(abs(mv(mv>=1)));
+         Th=mean(abs(mv(mv>=2)));
 else
         x = sort(mv);
         x = x(x<=0.4*max(x));
         Th=mean(x);
-
 end
+
 for i=1:length(xd)-1
     % if Inu(i)==2           %%%% Based on Majority Voting
     if mv(i)>=Th         
-       
-        %plot(xt1([i i+1]),md([i i+1]),'g');
         plot(xt2([i i+1]),mv([i i+1]),'r');
     end
 end
@@ -188,7 +177,6 @@ title('Channel 6 ')
 
 subplot(4,1,4)
 plot(xt2,Inu,'k')
-%plot(Inu,'k')
 xlabel('Time (s)')
 ylabel('Label')
 title('Majority Voting')
